@@ -11,13 +11,14 @@ function cover(New, Old) {
     let Result = [{ data: [] }];
     if (Old == "NULL") {
         New[0].data.forEach(element => {
-            if (element[header.indexOf('nf')] == 2019||element[header.indexOf('nf')] == 'nf'){
+            if (element[header.indexOf('nf')] == 2019 || element[header.indexOf('nf')] == 'nf') {
                 Result[0].data.push(element);
-            }});
+            }
+        });
         return Result;
     }
     New[0].data.forEach(element => {
-        if (element[header.indexOf('nf')] == 2019||element[header.indexOf('nf')] == 'nf'){
+        if (element[header.indexOf('nf')] == 2019 || element[header.indexOf('nf')] == 'nf') {
             let stard;
             Old[0].data.forEach(temp => {
                 if (temp[Old[0].data[0].indexOf('ksh')] == element[header.indexOf('ksh')])
@@ -33,24 +34,28 @@ function cover(New, Old) {
 }
 function toData(New) {
     let data = {};
-    let i=0;
+    let i = 0;
     let header = New[0].data[0];
     New[0].data.forEach((element, i) => {
         if (i > 0) {
             if (data[element[header.indexOf('ssmc')]]);
             else
                 data[element[header.indexOf('ssmc')]] = {};
-            if (data[element[header.indexOf('ssmc')]][element[header.indexOf('zymc')]]);
-            else {
-                data[element[header.indexOf('ssmc')]][element[header.indexOf('zymc')]] = {};
-                data[element[header.indexOf('ssmc')]][element[header.indexOf('zymc')]]["男"] = [];
-                data[element[header.indexOf('ssmc')]][element[header.indexOf('zymc')]]["女"] = [];
+            if (!data[element[header.indexOf('ssmc')]][element[header.indexOf('drlbdm')]]) {
+                data[element[header.indexOf('ssmc')]][element[header.indexOf('drlbdm')]] = {}
             }
-            if (element[header.indexOf('yxmc')])
-                {institute[element[header.indexOf('zymc')]][element[header.indexOf('yxmc')]].push(element);}
-            else
-                {data[element[header.indexOf('ssmc')]][element[header.indexOf('zymc')]][element[header.indexOf('xbmc')]].push(element);
-                }
+            if (data[element[header.indexOf('ssmc')]][element[header.indexOf('drlbdm')]][element[header.indexOf('zymc')]]);
+            else {
+                data[element[header.indexOf('ssmc')]][element[header.indexOf('drlbdm')]][element[header.indexOf('zymc')]] = {
+                    "男": [], "女": []
+                };
+            }
+            if (element[header.indexOf('yxmc')]) {
+                institute[element[header.indexOf('zymc')]][element[header.indexOf('yxmc')]].push(element);
+            }
+            else {
+                data[element[header.indexOf('ssmc')]][element[header.indexOf('drlbdm')]][element[header.indexOf('zymc')]][element[header.indexOf('xbmc')]].push(element);
+            }
         }
     });
 
@@ -59,41 +64,43 @@ function toData(New) {
 
 
 function dealWithAll(data) {
-    let ii=0;
+    let ii = 0;
     Object.keys(data).forEach((area) => {//+=5
-        Object.keys(data[area]).forEach((inst) => {
-            Object.keys(data[area][inst]).forEach((sex) => {
-                let rest = {};
-                let total = 0;
-                Object.keys(info[inst]).forEach((xymc, i) => {
-                    rest[xymc] = (info[inst][xymc] - institute[inst][xymc].length>0?info[inst][xymc] - institute[inst][xymc].length:0.01);
-                    total = total + rest[xymc];
-                })
-                let allPersonNum = data[area][inst][sex].length;
-                let index = 0;
-                let Num={};
-                let temp = Object.keys(info[inst])
-                let orgin=data[area][inst][sex]
-                orgin = Random(orgin);
-                temp = Random(temp);
 
-                temp.forEach((v, i) => {
-                    if (i == temp.length - 1) {
-                        for (let y = index; y < allPersonNum; y++)
-                            {institute[inst][v].push(orgin[y]);
-                                console.log(ii++);
+        Object.keys(data[area]).forEach((drlb) => {
+            Object.keys(data[area][drlb]).forEach((inst) => {
+                Object.keys(data[area][drlb][inst]).forEach((sex) => {
+                    let rest = {};
+                    let total = 0;
+                    Object.keys(info[inst]).forEach((xymc, i) => {
+                        rest[xymc] = (info[inst][xymc] - institute[inst][xymc].length > 0 ? info[inst][xymc] - institute[inst][xymc].length : 0.01);
+                        total = total + rest[xymc];
+                    })
+                    let allPersonNum = data[area][drlb][inst][sex].length;
+                    let index = 0;
+                    let Num = {};
+                    let temp = Object.keys(info[inst])
+                    let orgin = data[area][drlb][inst][sex]
+                    orgin = Random(orgin);
+                    temp = Random(temp);
+
+                    temp.forEach((v, i) => {
+                        if (i == temp.length - 1) {
+                            for (let y = index; y < allPersonNum; y++) {
+                                institute[inst][v].push(orgin[y]);
                             }
-                    }
-                    else {
-                        let Num = Math.round(rest[v] / total * allPersonNum);
-                        {
-                            for (let y = index; y < index + Num; y++)
-                                {institute[inst][v].push(orgin[y]);
+                        }
+                        else {
+                            let Num = Math.round(rest[v] / total * allPersonNum);
+                            {
+                                for (let y = index; y < index + Num; y++) {
+                                    institute[inst][v].push(orgin[y]);
                                     console.log(ii++);
                                 }
+                            }
+                            index = index + Num;
                         }
-                        index = index + Num;
-                    }
+                    })
                 })
             })
         });
@@ -114,7 +121,7 @@ function Random(arr) {
     return arr;
 }
 
-function outPut(New, toWhere) {
+function output(New, toWhere) {
     let output = [];
     let header = New[0].data[0];
     output.push({
@@ -126,7 +133,6 @@ function outPut(New, toWhere) {
         Object.keys(institute[inst]).forEach((xymc) => {
             institute[inst][xymc].forEach((person) => {
                 person[header.indexOf("yxmc")] = xymc;
-
                 output[0].data.push(person);
             })
         })
@@ -138,8 +144,8 @@ function outPut(New, toWhere) {
         console.log("finished");
     });
 }
-function processStudent(newFile, oldFile, toWhere) {
 
+function processStudent(newFile, oldFile, toWhere) {
     let New = xlsx.parse(newFile);
     let Old;
     if (oldFile != "NULL")
@@ -149,10 +155,11 @@ function processStudent(newFile, oldFile, toWhere) {
     }
     let data = toData(cover(New, Old));
     dealWithAll(data);
-    outPut(New, toWhere);
-
+    output(New, toWhere);
 }
 
 
-// Main("C:\\Users\\87102\\Desktop\\招办系统\\招办系统\\假数据.xlsx", "C:\\Users\\87102\\Desktop\\招办系统\\招办系统\\oldtest.xlsx", "C:\\Users\\87102\\Desktop\\招办系统\\招办系统\\test2.xlsx");
-module.exports={processStudent};
+processStudent("/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/显示测试数据的副本_假数据.xls", 
+"/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/显示测试数据的副本_假数据.xls", 
+"/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/out.xlsx");
+//module.exports = { processStudent };
