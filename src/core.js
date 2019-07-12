@@ -4,10 +4,10 @@ let info = require("./招生数据.json");
 let xlsx = require("node-xlsx");
 let fs = require("fs");
 
-
+let header;
 
 function cover(New, Old) {
-    let header = New[0].data[0];
+    header = New[0].data[0];
     let Result = [{ data: [] }];
     if (Old == "NULL") {
         New[0].data.forEach(element => {
@@ -156,10 +156,11 @@ function processStudent(newFile, oldFile, toWhere) {
     let data = toData(cover(New, Old));
     dealWithAll(data);
     output(New, toWhere);
+    return {institute, header}
 }
 
 
-processStudent("/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/显示测试数据的副本_假数据.xls", 
-"/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/显示测试数据的副本_假数据.xls", 
-"/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/out.xlsx");
-//module.exports = { processStudent };
+//processStudent("/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/显示测试数据的副本_假数据.xls", 
+//"/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/显示测试数据的副本_假数据.xls", 
+//"/Users/wolf_tungsten/Documents/招生办数据可视化/测试用/out.xlsx");
+module.exports = { processStudent };

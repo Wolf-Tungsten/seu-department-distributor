@@ -1,4 +1,223 @@
 <!DOCTYPE html>
 <html>
-    
+
+<head>
+    <script src="ass/js/echarts.js"></script>
+</head>
+
+<body>
+    <div id="root">
+        <div id="areaNormal" class="graph"></div>
+        <div id="area" class="graph"></div>
+    </div>
+</body>
+<style>
+    body {
+        margin: 0;
+    }
+
+    #root {
+        margin: 10px;
+        width: 1200px;
+
+    }
+
+    .graph {
+        flex-basis: 1200px;
+        height: 780px;
+        background: #F0F0F0;
+        margin-bottom: 10px;
+    }
+</style>
+<script>
+    const ipc = require('electron').ipcRenderer;
+    const areaChart = echarts.init(document.getElementById('area'));
+    const areaNormalChart = echarts.init(document.getElementById('areaNormal'));
+
+    let set = false
+    ipc.on('data', (_, data) => {
+        // 区域图部分
+        if (!set) {
+            set = true
+        } else {
+            return
+        }
+        let areaMap = {}
+        let instMap = {}
+        let instAmount = {}
+        Object.keys(data.institute).forEach((cata) => {
+            Object.keys(data.institute[cata]).forEach((inst) => {
+                data.institute[cata][inst].forEach(student => {
+                    let ssmc = student[data.header.indexOf('ssmc')]
+                    if (!instMap[inst]) {
+                        instMap[inst] = {}
+                    }
+                    if (!instMap[inst][ssmc]) {
+                        instMap[inst][ssmc] = 0
+                    }
+                    instMap[inst][ssmc]++;
+                    if (!areaMap[ssmc]) {
+                        areaMap[ssmc] = {}
+                    }
+                    if (!areaMap[ssmc][inst]) {
+                        areaMap[ssmc][inst] = 0
+                    }
+                    areaMap[ssmc][inst]++;
+                    if (!instAmount[inst]) {
+                        instAmount[inst] = 0
+                    }
+                    instAmount[inst]++
+                })
+            })
+        })
+
+        let xData = Object.keys(instMap)
+        let areaList = Object.keys(areaMap)
+
+        let series = areaList.map((ssmc) => {
+            let data = []
+            xData.forEach(inst => {
+                data.push(instMap[inst][ssmc] ? (instMap[inst][ssmc] / instAmount[inst]) * 100 : 0)
+            })
+            return {
+                name: ssmc,
+                type: 'line',
+                stack: '学院总人数',
+                data,
+                areaStyle: {}
+            }
+        })
+
+        let option1 = {
+            title: {
+                text: '专业-省市分布图'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    data: xData,
+                    axisLabel: {
+                        interval: 0,
+                        color: '#000',
+                        shadowBlur: 50,
+                        fontSize: 10,
+                        rotate: -45
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value'
+                }
+            ],
+            series
+        }
+        areaChart.setOption(option1)
+
+        let areaNormalMap = {}
+        let instNormalMap = {}
+        let instNormalAmount = {}
+        let xNormalData = []
+
+
+        Object.keys(data.institute).forEach((cata) => {
+            Object.keys(data.institute[cata]).forEach((inst) => {
+                xNormalData.push(`${cata}-${inst}`)
+                let cataInst = `${cata}-${inst}`
+                data.institute[cata][inst].filter(student => {
+                    let drlb = student[data.header.indexOf('drlbdm')]
+                    return drlb == '1' || drlb == '2' || drlb == '01' || drlb == '02' || drlb == '25' || drlb == '15'
+                }).forEach(student => {
+                    let ssmc = student[data.header.indexOf('ssmc')]
+                    if (!instNormalMap[cataInst]) {
+                        instNormalMap[cataInst] = {}
+                    }
+                    if (!instNormalMap[cataInst][ssmc]) {
+                        instNormalMap[cataInst][ssmc] = 0
+                    }
+                    instNormalMap[cataInst][ssmc]++;
+                    if (!areaNormalMap[ssmc]) {
+                        areaNormalMap[ssmc] = {}
+                    }
+                    if (!areaNormalMap[ssmc][cataInst]) {
+                        areaNormalMap[ssmc][cataInst] = 0
+                    }
+                    areaNormalMap[ssmc][cataInst]++;
+                    if (!instNormalAmount[cataInst]) {
+                        instNormalAmount[cataInst] = 0
+                    }
+                    instNormalAmount[cataInst]++
+                })
+            })
+        })
+
+        let seriesNormal = areaList.map((ssmc) => {
+            let data = []
+            xNormalData.forEach(inst => {
+                data.push(instNormalMap[inst][ssmc] ? (instNormalMap[inst][ssmc] / instNormalAmount[inst]) * 100 : 0)
+            })
+            return {
+                name: ssmc,
+                type: 'line',
+                stack: '学院总人数',
+                data,
+                areaStyle: {}
+            }
+        })
+
+        console.log(seriesNormal)
+
+        let option2 = {
+            title: {
+                text: '普通类-专业-省市分布图'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    data: xNormalData,
+                    axisLabel: {
+                        interval: 0,
+                        color: '#000',
+                        shadowBlur: 50,
+                        fontSize: 10,
+                        rotate: -45
+                    },
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value'
+                }
+            ],
+            series: seriesNormal
+        }
+
+        areaNormalChart.setOption(option2)
+    })
+</script>
+
 </html>

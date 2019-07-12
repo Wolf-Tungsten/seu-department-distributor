@@ -1,5 +1,5 @@
 const { app, BrowserWindow, Menu, shell } = require('electron');
-const { dialog, ipcMain } = require( 'electron' );
+const { dialog, ipcMain } = require('electron');
 
 
 const { processStudent } = require('./core');
@@ -11,17 +11,17 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
+let mainWindow, visualizeWindow;
 
 const createWindow = () => {
-  Menu.setApplicationMenu(null);   //隐藏menu
+  //Menu.setApplicationMenu(null);   //隐藏menu
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 500,
     height: 310,
-    resizable:false,
-    maximizable:false,
-    minimizable:false
+    resizable: false,
+    maximizable: false,
+    minimizable: false
   });
 
 
@@ -39,7 +39,6 @@ const createWindow = () => {
     mainWindow = null;
   });
 
-
 };
 
 let pathname = {};
@@ -50,8 +49,10 @@ let pathname = {};
 ipcMain.on('start', async (sys) => {
   if (pathname.path1 == undefined || pathname.path3 == undefined) {
     //mainWindow.webContents.send('getflag', false);
-    dialog.showMessageBox({type:'error',title:'数据不完整', message:`请正确选择输入数据`, buttons:['对不起，我错了'
-      ]})
+    dialog.showMessageBox({
+      type: 'error', title: '数据不完整', message: `请正确选择输入数据`, buttons: ['对不起，我错了'
+      ]
+    })
     return;
   }
   if (pathname.path2 == undefined) {
@@ -63,17 +64,39 @@ ipcMain.on('start', async (sys) => {
 
   let proc = new Promise((resolve) => {
 
-    processStudent(pathname.path1, pathname.path2, pathname.path3);
+    let result = processStudent(pathname.path1, pathname.path2, pathname.path3);
     resolve()
-    dialog.showMessageBox({type:'info',title:'处理完成', message:`分配成功，结果已保存至：${pathname.path3}`, buttons:['打开输出位置',
-      '关闭'
-      ]}, (buttonIndex) => {
-      if(buttonIndex === 0){
+    dialog.showMessageBox({
+      type: 'info', title: '处理完成', message: `分配成功，结果已保存至：${pathname.path3}`, buttons: ['结果可视化', '打开输出位置',
+        '关闭'
+      ]
+    }, (buttonIndex) => {
+      if (buttonIndex === 0) {
+        // Create the browser window.
+        visualizeWindow = new BrowserWindow({
+          width: 1220,
+          height: 830,
+          resizable: false,
+          maximizable: false,
+          minimizable: false
+        });
+        visualizeWindow.loadURL(`file://${__dirname}/visualize.html`);
+        visualizeWindow.webContents.openDevTools();
+        visualizeWindow.on('closed', () => {
+          visualizeWindow = null;
+        });
+        setInterval(()=>{
+          visualizeWindow.webContents.send('data', result)
+          console.log(result)
+        }, 3000)
+        
+      }
+      if (buttonIndex === 1) {
         shell.showItemInFolder(pathname.path3)
       }
       pathname = {};
     })
-    
+
     //mainWindow.webContents.send('finish', true);
   })
 
@@ -83,7 +106,7 @@ ipcMain.on('start', async (sys) => {
 
 ipcMain.on('open-dialog1', function (event, p) {
   dialog.showOpenDialog({
-    filters:[{name:'未分配数据', extensions:['xls', 'xlsx']}],
+    filters: [{ name: '未分配数据', extensions: ['xls', 'xlsx'] }],
     properties: ['openFile']
   }, function (files) {
     if (files) {// 如果有选中
@@ -97,7 +120,7 @@ ipcMain.on('open-dialog1', function (event, p) {
 
 ipcMain.on('open-dialog2', function (event, p) {
   dialog.showOpenDialog({
-    filters:[{name:'已分配数据', extensions:['xls', 'xlsx']}],
+    filters: [{ name: '已分配数据', extensions: ['xls', 'xlsx'] }],
     properties: ['openFile']
   }, function (files) {
     if (files) {// 如果有选中
@@ -111,7 +134,7 @@ ipcMain.on('open-dialog2', function (event, p) {
 
 ipcMain.on('save-dialog3', function (event, p) {
   dialog.showSaveDialog({
-    filters:[{name:'分配结果数据', extensions:['xlsx']}],
+    filters: [{ name: '分配结果数据', extensions: ['xlsx'] }],
     properties: [p]
   }, function (files) {
     if (files) {// 如果有选中
